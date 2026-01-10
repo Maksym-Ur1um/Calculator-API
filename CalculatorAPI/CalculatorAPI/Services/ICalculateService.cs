@@ -1,6 +1,6 @@
 ﻿using CalculatorAPI.DTO;
 
-namespace CalculatorAPI.Services.ServiceContract
+namespace CalculatorAPI.Services
 {
     public interface ICalculateService
     {

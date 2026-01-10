@@ -2,14 +2,14 @@ let input = document.querySelector('input')
 const calculatorElements = document.querySelectorAll('.number-button, .operation-button')
 
 calculatorElements.forEach((element) => {
-    element.addEventListener('click', (event) => {
+    element.addEventListener('click', (_) => {
         const valueToAdd = element.dataset.value || element.textContent;
         addToInput(valueToAdd);
     });
 });
 
 const clearOperation = document.querySelector(".clear-button");
-clearOperation.addEventListener('click', (event) => {
+clearOperation.addEventListener('click', (_) => {
     input.value = "";
 });
 

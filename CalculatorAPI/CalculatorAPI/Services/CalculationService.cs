@@ -1,117 +1,170 @@
 ﻿using CalculatorAPI.DTO;
-using CalculatorAPI.Services.ServiceContract;
+using System.Globalization;
 
 namespace CalculatorAPI.Services
 {
     public class CalculationService : ICalculateService
     {
-        public double Calculate(string input)
+        enum TokenType
         {
-            double result = EvaluateRPN(ConvertToRPN(GetTokens(input)));
+            Literal,
+            Plus,
+            Minus,
+            Multiply,
+            Divide
+        }
+        struct Token
+        {
+            public TokenType tokenType;
+            public string value;
+            public Token(TokenType tokentype, string value)
+            {
+                this.tokenType = tokentype;
+                this.value = value;
+            }
+        }
+        private static readonly Dictionary<TokenType, int> Priorities =
+        new Dictionary<TokenType, int>()
+        {
+                {TokenType.Plus, 1 },
+                {TokenType.Minus, 1},
+                {TokenType.Multiply, 2},
+                {TokenType.Divide, 2}
+        };
+
+        public double Calculate(string expression)
+        {
+            var Tokens = GetTokens(expression);
+            var RPNExpression = ConvertToRPN(Tokens);
+            double result = EvaluateRPN(RPNExpression);
             return result;
         }
 
-        private List<string> GetTokens(string input)
+        private List<Token> GetTokens(string expression)
         {
-            List<string> tokens = new List<string>();
+            List<Token> tokens = new List<Token>();
             string tempValue = "";
-            foreach (var item in input)
+            foreach (var @char in expression)
             {
-                if (char.IsDigit(item))
+                if (char.IsDigit(@char))
                 {
-                    tempValue += item;
-                } else if (item == '.')
-                {
-                    tempValue += item;
-                } else if (item == '-' && tempValue == "")
-                {
-                    tempValue += item;
-                } else if (item == '+' || item == '-' || item == '*' || item == '/')
-                {
-                    if (tempValue != "")
-                    {
-                        tokens.Add(tempValue);
-                    }
-                    tokens.Add(item.ToString());
-                    tempValue = "";
+                    tempValue += @char;
                 }
+                else if (@char == '.' || @char == ',')
+                {
+                    tempValue += ".";
+                }
+                else if (@char == '-' && tempValue == "")
+                {
+                    tempValue += @char;
+                    break;
+                }
+                if (tempValue != "")
+                {
+                    switch (@char)
+                    {
+                        case '+':
+                            tokens.Add(new Token(TokenType.Literal, tempValue));
+                            tempValue = "";
+                            tokens.Add(new Token(TokenType.Plus, "+"));
+                            break;
+                        case '-':
+                            tokens.Add(new Token(TokenType.Literal, tempValue));
+                            tempValue = "";
+                            tokens.Add(new Token(TokenType.Minus, "-"));
+                            break;
+                        case '*':
+                            tokens.Add(new Token(TokenType.Literal, tempValue));
+                            tempValue = "";
+                            tokens.Add(new Token(TokenType.Multiply, "*"));
+                            break;
+                        case '/':
+                            tokens.Add(new Token(TokenType.Literal, tempValue));
+                            tempValue = "";
+                            tokens.Add(new Token(TokenType.Divide, "/"));
+                            break;
+                    }
+                }
+
             }
             if (tempValue != "")
             {
-                tokens.Add(tempValue);
+                tokens.Add(new Token(TokenType.Literal, tempValue));
             }
             return tokens;
         }
 
-        private Queue<string> ConvertToRPN(List<string> tokens)
+        private Queue<Token> ConvertToRPN(List<Token> tokens)
         {
-            Stack<string> operators = new Stack<string>();
-            Queue<string> RPNExpression = new Queue<string>();
+            Stack<Token> operators = new Stack<Token>();
+            Queue<Token> RPNExpression = new Queue<Token>();
 
-            foreach (var item in tokens)
+            foreach (var token in tokens)
             {
-                if (double.TryParse(item, out var value))
+                if (token.tokenType == TokenType.Literal)
                 {
-                    RPNExpression.Enqueue(item);
+                    RPNExpression.Enqueue(token);
                 }
-
-                if (item == "+" || item == "-" || item == "*" || item == "/")
+                else
                 {
                     while (operators.Count > 0)
                     {
-                        if(GetPriority(item) <= GetPriority(operators.Peek())){
-                            RPNExpression.Enqueue((string)operators.Pop());
-                        } else 
+                        if (Priorities[token.tokenType] <= Priorities[operators.Peek().tokenType])
+                        {
+                            RPNExpression.Enqueue(operators.Pop());
+                        }
+                        else
                         {
                             break;
                         }
                     }
-                    operators.Push(item);
+                    operators.Push(token);
                 }
             }
             while (operators.Count > 0)
             {
-                RPNExpression.Enqueue((string)operators.Pop());
+                RPNExpression.Enqueue(operators.Pop());
             }
             return RPNExpression;
         }
-        private double EvaluateRPN(Queue<string> RPNExpression)
+        private double EvaluateRPN(Queue<Token> RPNExpression)
         {
             double first_operand = 0;
             double second_operand = 0;
             Stack<double> operands = new Stack<double>();
-            foreach(var item in RPNExpression)
+            foreach (var token in RPNExpression)
             {
-                if(double.TryParse(item, out var value))
+                if (token.tokenType == TokenType.Literal)
                 {
-                    operands.Push(value);
+                    operands.Push(double.Parse(token.value, CultureInfo.InvariantCulture));
                 }
-                if(item == "+" || item == "-" || item == "*" || item == "/")
+                else
                 {
-                    if(operands.Count == 1)
+                    if (operands.Count == 1)
                     {
                         second_operand = operands.Pop();
                         first_operand = 0;
-                    } else
+                    }
+                    else
                     {
                         second_operand = operands.Pop();
                         first_operand = operands.Pop();
                     }
-                    switch(item)
+                    switch (token.tokenType)
                     {
-                        case "+":
+                        case TokenType.Plus:
                             first_operand += second_operand;
                             operands.Push(first_operand);
                             break;
-                        case "-":
+                        case TokenType.Minus:
                             first_operand -= second_operand;
                             operands.Push(first_operand);
                             break;
-                        case "*":
+                        case TokenType.Multiply:
                             first_operand *= second_operand;
                             operands.Push(first_operand);
                             break;
-                        case "/":
+                        case TokenType.Divide:
                             first_operand /= second_operand;
                             operands.Push(first_operand);
                             break;
@@ -122,12 +175,5 @@ namespace CalculatorAPI.Services
             return operands.Pop();
         }
 
-        private int GetPriority(string op)
-        {
-            if (op == "*" || op == "/")
-                return 2;
-
-            return 1;
-        }
     }
 }

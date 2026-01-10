@@ -1,5 +1,5 @@
 ﻿using CalculatorAPI.DTO;
-using CalculatorAPI.Services.ServiceContract;
+using CalculatorAPI.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CalculatorAPI.Controllers
@@ -19,7 +19,13 @@ namespace CalculatorAPI.Controllers
         public IActionResult Index([FromBody]CalculationRequest calculationRequest)
         {
             double result = calculateService.Calculate(calculationRequest.Expression);
-            return Ok(result);
+            try
+            {
+                return Ok(result);
+            } catch
+            {
+                return BadRequest("InvalidExpression");
+            }
         }
     }
 }

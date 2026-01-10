@@ -1,5 +1,4 @@
 using CalculatorAPI.Services;
-using CalculatorAPI.Services.ServiceContract;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
