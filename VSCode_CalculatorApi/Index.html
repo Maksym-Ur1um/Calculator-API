@@ -1,47 +1,49 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel = "stylesheet" href="styles.css" >
-    <title>Calculator</title>
-</head>
-<body>
-    <div>
-        <input
-            type="text"
-            readonly="true"
-            class="result-display" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <title>Web Calculator</title>
+  </head>
+  <body>
+    <div class="calculator">
+      <input
+        type="text"
+        readonly
+        class="result-display"
+        id="display"
+        value="0"
+      />
 
+      <div class="buttons-grid">
+        <button class="action-button" id="clear">AC</button>
+        <button class="action-button" id="backspace">&#9003;</button>
+        <button class="operation-button" data-value="(">(</button>
+        <button class="operation-button" data-value=")">)</button>
+
+        <button class="number-button">7</button>
+        <button class="number-button">8</button>
+        <button class="number-button">9</button>
+        <button class="operation-button" data-value="/">/</button>
+
+        <button class="number-button">4</button>
+        <button class="number-button">5</button>
+        <button class="number-button">6</button>
+        <button class="operation-button" data-value="*">×</button>
+
+        <button class="number-button">1</button>
+        <button class="number-button">2</button>
+        <button class="number-button">3</button>
+        <button class="operation-button" data-value="-">-</button>
+
+        <button class="number-button">0</button>
+        <button class="number-button">.</button>
+        <button class="equals-button" id="equals">=</button>
+        <button class="operation-button" data-value="+">+</button>
+      </div>
     </div>
-        <button class="clear-button" >
-            AC
-        </button>
-        <div>
-            <button class="number-button">7</button>
-            <button class="number-button">8</button>
-            <button class="number-button">9</button>
-            <button class="operation-button">/</button>
-        </div>
-        <div>
-            <button class="number-button">4</button>
-            <button class="number-button">5</button>
-            <button class="number-button">6</button>
-            <button class="operation-button" data-value="*">×</button>
-        </div>
-        <div>
-            <button class="number-button">1</button>
-            <button class="number-button">2</button>
-            <button class="number-button">3</button>
-            <button class="operation-button">-</button>
-        </div>
-        <div>
-            <button class="number-button">0</button>
-            <button class="number-button">.</button>
-            <button class="equals-button" id="equals">=</button>
-            <button class="operation-button">+</button>
-        </div>
 
-        <script src="JavaScript.js"></script>
-</body>
+    <script type="module" src="js/calculator.js"></script>
+  </body>
 </html>

@@ -11,8 +11,11 @@ namespace CalculatorAPI.Services
             Plus,
             Minus,
             Multiply,
-            Divide
+            Divide,
+            LeftParen,
+            RightParen
         }
+
         struct Token
         {
             public TokenType tokenType;
@@ -23,13 +26,15 @@ namespace CalculatorAPI.Services
                 this.value = value;
             }
         }
+
         private static readonly Dictionary<TokenType, int> Priorities =
         new Dictionary<TokenType, int>()
         {
-                {TokenType.Plus, 1 },
-                {TokenType.Minus, 1},
-                {TokenType.Multiply, 2},
-                {TokenType.Divide, 2}
+            {TokenType.LeftParen, 0 },
+            {TokenType.Plus, 1 },
+            {TokenType.Minus, 1},
+            {TokenType.Multiply, 2},
+            {TokenType.Divide, 2}
         };
 
         public double Calculate(string expression)
@@ -44,6 +49,7 @@ namespace CalculatorAPI.Services
         {
             List<Token> tokens = new List<Token>();
             string tempValue = "";
+
             foreach (var @char in expression)
             {
                 if (char.IsDigit(@char))
@@ -54,39 +60,30 @@ namespace CalculatorAPI.Services
                 {
                     tempValue += ".";
                 }
-                else if (@char == '-' && tempValue == "")
+                else if (@char == '-' && tempValue == "" && (tokens.Count == 0 || tokens.Last().tokenType == TokenType.LeftParen))
                 {
                     tempValue += @char;
-                    break;
                 }
-                if (tempValue != "")
+                else
                 {
+                    if (tempValue != "")
+                    {
+                        tokens.Add(new Token(TokenType.Literal, tempValue));
+                        tempValue = "";
+                    }
+
                     switch (@char)
                     {
-                        case '+':
-                            tokens.Add(new Token(TokenType.Literal, tempValue));
-                            tempValue = "";
-                            tokens.Add(new Token(TokenType.Plus, "+"));
-                            break;
-                        case '-':
-                            tokens.Add(new Token(TokenType.Literal, tempValue));
-                            tempValue = "";
-                            tokens.Add(new Token(TokenType.Minus, "-"));
-                            break;
-                        case '*':
-                            tokens.Add(new Token(TokenType.Literal, tempValue));
-                            tempValue = "";
-                            tokens.Add(new Token(TokenType.Multiply, "*"));
-                            break;
-                        case '/':
-                            tokens.Add(new Token(TokenType.Literal, tempValue));
-                            tempValue = "";
-                            tokens.Add(new Token(TokenType.Divide, "/"));
-                            break;
+                        case '+': tokens.Add(new Token(TokenType.Plus, "+")); break;
+                        case '-': tokens.Add(new Token(TokenType.Minus, "-")); break;
+                        case '*': tokens.Add(new Token(TokenType.Multiply, "*")); break;
+                        case '/': tokens.Add(new Token(TokenType.Divide, "/")); break;
+                        case '(': tokens.Add(new Token(TokenType.LeftParen, "(")); break;
+                        case ')': tokens.Add(new Token(TokenType.RightParen, ")")); break;
                     }
                 }
-
             }
+
             if (tempValue != "")
             {
                 tokens.Add(new Token(TokenType.Literal, tempValue));
@@ -105,6 +102,18 @@ namespace CalculatorAPI.Services
                 {
                     RPNExpression.Enqueue(token);
                 }
+                else if (token.tokenType == TokenType.LeftParen)
+                {
+                    operators.Push(token);
+                }
+                else if (token.tokenType == TokenType.RightParen)
+                {
+                    while (operators.Count > 0 && operators.Peek().tokenType != TokenType.LeftParen)
+                    {
+                        RPNExpression.Enqueue(operators.Pop());
+                    }
+                    if (operators.Count > 0) operators.Pop();
+                }
                 else
                 {
                     while (operators.Count > 0)
@@ -121,17 +130,20 @@ namespace CalculatorAPI.Services
                     operators.Push(token);
                 }
             }
+
             while (operators.Count > 0)
             {
                 RPNExpression.Enqueue(operators.Pop());
             }
             return RPNExpression;
         }
+
         private double EvaluateRPN(Queue<Token> RPNExpression)
         {
             double first_operand = 0;
             double second_operand = 0;
             Stack<double> operands = new Stack<double>();
+
             foreach (var token in RPNExpression)
             {
                 if (token.tokenType == TokenType.Literal)
@@ -150,6 +162,7 @@ namespace CalculatorAPI.Services
                         second_operand = operands.Pop();
                         first_operand = operands.Pop();
                     }
+
                     switch (token.tokenType)
                     {
                         case TokenType.Plus:
@@ -174,6 +187,5 @@ namespace CalculatorAPI.Services
             }
             return operands.Pop();
         }
-
     }
 }
